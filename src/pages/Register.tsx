@@ -8,11 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Phone, Mail, Lock, Building2, MapPin } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signUp } = useAuth();
   const [activeTab, setActiveTab] = useState("client");
   
   const [clientData, setClientData] = useState({
@@ -29,39 +29,39 @@ const Register = () => {
     password: ""
   });
 
-  const handleClientRegister = (e: React.FormEvent) => {
+  const handleClientRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (Object.values(clientData).every(value => value)) {
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Sua conta foi criada. Faça login para continuar.",
-      });
+    if (!Object.values(clientData).every(value => value)) {
+      return;
+    }
+
+    const { error } = await signUp(clientData.email, clientData.password, {
+      user_type: 'client',
+      name: clientData.name,
+      phone: clientData.phone
+    });
+
+    if (!error) {
       navigate("/login?type=client");
-    } else {
-      toast({
-        title: "Erro no cadastro",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
     }
   };
 
-  const handleBarbershopRegister = (e: React.FormEvent) => {
+  const handleBarbershopRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (Object.values(barbershopData).every(value => value)) {
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Sua barbearia foi cadastrada. Faça login para continuar.",
-      });
+    if (!Object.values(barbershopData).every(value => value)) {
+      return;
+    }
+
+    const { error } = await signUp(barbershopData.email, barbershopData.password, {
+      user_type: 'barbershop',
+      name: barbershopData.name,
+      address: barbershopData.address
+    });
+
+    if (!error) {
       navigate("/login?type=barbershop");
-    } else {
-      toast({
-        title: "Erro no cadastro",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -101,6 +101,7 @@ const Register = () => {
                         className="pl-10"
                         value={clientData.name}
                         onChange={(e) => setClientData({...clientData, name: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -116,6 +117,7 @@ const Register = () => {
                         className="pl-10"
                         value={clientData.phone}
                         onChange={(e) => setClientData({...clientData, phone: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -131,6 +133,7 @@ const Register = () => {
                         className="pl-10"
                         value={clientData.email}
                         onChange={(e) => setClientData({...clientData, email: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -146,6 +149,7 @@ const Register = () => {
                         className="pl-10"
                         value={clientData.password}
                         onChange={(e) => setClientData({...clientData, password: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -169,6 +173,7 @@ const Register = () => {
                         className="pl-10"
                         value={barbershopData.name}
                         onChange={(e) => setBarbershopData({...barbershopData, name: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -183,6 +188,7 @@ const Register = () => {
                         className="pl-10 min-h-[60px]"
                         value={barbershopData.address}
                         onChange={(e) => setBarbershopData({...barbershopData, address: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -198,6 +204,7 @@ const Register = () => {
                         className="pl-10"
                         value={barbershopData.email}
                         onChange={(e) => setBarbershopData({...barbershopData, email: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -213,6 +220,7 @@ const Register = () => {
                         className="pl-10"
                         value={barbershopData.password}
                         onChange={(e) => setBarbershopData({...barbershopData, password: e.target.value})}
+                        required
                       />
                     </div>
                   </div>

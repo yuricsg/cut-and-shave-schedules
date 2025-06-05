@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
+  const { signIn } = useAuth();
   const userType = searchParams.get("type") || "client";
   
   const [loginData, setLoginData] = useState({
@@ -20,27 +20,22 @@ const Login = () => {
     password: ""
   });
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simulação de login
-    if (loginData.email && loginData.password) {
-      toast({
-        title: "Login realizado com sucesso!",
-        description: `Bem-vindo(a) ao sistema!`,
-      });
-      
+    if (!loginData.email || !loginData.password) {
+      return;
+    }
+
+    const { error } = await signIn(loginData.email, loginData.password);
+    
+    if (!error) {
+      // Redirect will be handled by auth state change
       if (userType === "client") {
         navigate("/client-dashboard");
       } else {
         navigate("/barbershop-dashboard");
       }
-    } else {
-      toast({
-        title: "Erro no login",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -90,6 +85,7 @@ const Login = () => {
                         className="pl-10"
                         value={loginData.email}
                         onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -105,6 +101,7 @@ const Login = () => {
                         className="pl-10"
                         value={loginData.password}
                         onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -128,6 +125,7 @@ const Login = () => {
                         className="pl-10"
                         value={loginData.email}
                         onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
@@ -143,6 +141,7 @@ const Login = () => {
                         className="pl-10"
                         value={loginData.password}
                         onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                        required
                       />
                     </div>
                   </div>
