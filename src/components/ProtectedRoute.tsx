@@ -17,15 +17,20 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
     
     if (!loading) {
       if (!user) {
-        console.log('No user, redirecting to login');
+        console.log('No user found, redirecting to login');
         navigate('/login');
         return;
       }
 
-      if (requiredUserType && userProfile?.user_type !== requiredUserType) {
-        console.log('Wrong user type, redirecting. Required:', requiredUserType, 'Actual:', userProfile?.user_type);
+      if (!userProfile) {
+        console.log('User exists but no profile found, waiting...');
+        return;
+      }
+
+      if (requiredUserType && userProfile.user_type !== requiredUserType) {
+        console.log('Wrong user type, redirecting. Required:', requiredUserType, 'Actual:', userProfile.user_type);
         // Redirect to appropriate dashboard based on user type
-        switch (userProfile?.user_type) {
+        switch (userProfile.user_type) {
           case 'client':
             navigate('/client-dashboard');
             break;
@@ -38,7 +43,10 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
           default:
             navigate('/login');
         }
+        return;
       }
+
+      console.log('Access granted to protected route');
     }
   }, [user, userProfile, loading, navigate, requiredUserType]);
 
@@ -57,7 +65,18 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
     return null;
   }
 
-  if (requiredUserType && userProfile?.user_type !== requiredUserType) {
+  if (!userProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (requiredUserType && userProfile.user_type !== requiredUserType) {
     return null;
   }
 

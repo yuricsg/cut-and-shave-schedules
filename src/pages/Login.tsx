@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn } = useAuth();
+  const { signIn, user, userProfile, loading } = useAuth();
   const { toast } = useToast();
   const userType = searchParams.get("type") || "client";
   
@@ -22,6 +22,27 @@ const Login = () => {
     password: ""
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect authenticated users to their dashboard
+  useEffect(() => {
+    if (!loading && user && userProfile) {
+      console.log('User already authenticated, redirecting to dashboard. User type:', userProfile.user_type);
+      
+      switch (userProfile.user_type) {
+        case 'client':
+          navigate('/client-dashboard');
+          break;
+        case 'barbershop':
+          navigate('/barbershop-dashboard');
+          break;
+        case 'barber':
+          navigate('/barber-dashboard');
+          break;
+        default:
+          navigate('/');
+      }
+    }
+  }, [user, userProfile, loading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,15 +63,8 @@ const Login = () => {
       const { error } = await signIn(loginData.email, loginData.password);
       
       if (!error) {
-        console.log('Login successful, redirecting...');
-        // Wait a bit for the auth state to update
-        setTimeout(() => {
-          if (userType === "client") {
-            navigate("/client-dashboard");
-          } else {
-            navigate("/barbershop-dashboard");
-          }
-        }, 1000);
+        console.log('Login successful, waiting for profile data...');
+        // Don't navigate here - let the useEffect handle navigation after profile is loaded
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -63,6 +77,18 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

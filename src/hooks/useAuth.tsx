@@ -25,19 +25,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event, 'Session:', !!session);
+        console.log('Auth event:', event, 'Session exists:', !!session);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Defer profile fetching to prevent deadlocks
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
-        } else {
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('User signed in, fetching profile...');
+          // Fetch profile immediately after sign in
+          await fetchUserProfile(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out, clearing profile');
           setUserProfile(null);
         }
         
@@ -45,19 +48,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', !!session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
+    // Check for existing session on mount
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Initial session check - Session exists:', !!session, 'Error:', error);
+        
+        if (session?.user) {
+          setSession(session);
+          setUser(session.user);
+          await fetchUserProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    checkSession();
+
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
@@ -74,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      console.log('Profile fetched:', data);
+      console.log('Profile fetched successfully:', data);
       setUserProfile(data);
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -83,14 +97,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
-      console.log('Attempting signup for:', email, 'with data:', userData);
-      const redirectUrl = `${window.location.origin}/`;
+      console.log('Attempting signup for:', email);
       
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: userData
         }
       });
@@ -132,15 +144,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           description: error.message,
           variant: "destructive",
         });
-      } else {
-        console.log('Signin successful, user:', data.user?.email);
-        toast({
-          title: "Login realizado",
-          description: "Bem-vindo de volta!",
-        });
+        return { error };
       }
 
-      return { error };
+      console.log('Signin successful for user:', data.user?.email);
+      toast({
+        title: "Login realizado",
+        description: "Bem-vindo de volta!",
+      });
+
+      return { error: null };
     } catch (error: any) {
       console.error('Signin catch error:', error);
       return { error };
