@@ -184,7 +184,7 @@ const Register = () => {
                       <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Textarea
                         id="barbershop-address"
-                        placeholder="Rua das Flores, 123 - Centro - São Paulo - SP"
+                        placeholder="Av. República do Líbano, 251 - Pina, Recife - PE, 51110-160"
                         className="pl-10 min-h-[60px]"
                         value={barbershopData.address}
                         onChange={(e) => setBarbershopData({...barbershopData, address: e.target.value})}
