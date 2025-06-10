@@ -22,13 +22,16 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
         return;
       }
 
+      // If we have a user but no profile yet, we wait
       if (!userProfile) {
         console.log('User exists but no profile found, waiting...');
         return;
       }
 
+      // If a specific user type is required and the user doesn't match, redirect
       if (requiredUserType && userProfile.user_type !== requiredUserType) {
         console.log('Wrong user type, redirecting. Required:', requiredUserType, 'Actual:', userProfile.user_type);
+        
         // Redirect to appropriate dashboard based on user type
         switch (userProfile.user_type) {
           case 'client':
@@ -43,13 +46,13 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
           default:
             navigate('/login');
         }
-        return;
+      } else {
+        console.log('Access granted to protected route');
       }
-
-      console.log('Access granted to protected route');
     }
   }, [user, userProfile, loading, navigate, requiredUserType]);
 
+  // Show loading spinner while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -61,10 +64,12 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
     );
   }
 
+  // If there's no user, render nothing (redirect will happen in useEffect)
   if (!user) {
     return null;
   }
 
+  // If we're still waiting for the user profile, show a loading indicator
   if (!userProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -76,10 +81,13 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
     );
   }
 
+  // If a specific user type is required and the user doesn't match, render nothing
+  // (redirect will happen in useEffect)
   if (requiredUserType && userProfile.user_type !== requiredUserType) {
     return null;
   }
 
+  // If all checks pass, render the protected content
   return <>{children}</>;
 };
 
