@@ -13,13 +13,17 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('ProtectedRoute - Loading:', loading, 'User:', !!user, 'Profile:', userProfile?.user_type);
+    
     if (!loading) {
       if (!user) {
+        console.log('No user, redirecting to login');
         navigate('/login');
         return;
       }
 
       if (requiredUserType && userProfile?.user_type !== requiredUserType) {
+        console.log('Wrong user type, redirecting. Required:', requiredUserType, 'Actual:', userProfile?.user_type);
         // Redirect to appropriate dashboard based on user type
         switch (userProfile?.user_type) {
           case 'client':

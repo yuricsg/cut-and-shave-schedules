@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth event:', event, 'Session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -46,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', !!session);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -60,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -71,6 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      console.log('Profile fetched:', data);
       setUserProfile(data);
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -79,6 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
+      console.log('Attempting signup for:', email, 'with data:', userData);
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
@@ -91,12 +96,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
+        console.error('Signup error:', error);
         toast({
           title: "Erro no cadastro",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log('Signup successful');
         toast({
           title: "Cadastro realizado!",
           description: "Verifique seu email para confirmar a conta.",
@@ -105,33 +112,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return { error };
     } catch (error: any) {
+      console.error('Signup catch error:', error);
       return { error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting signin for:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Signin error:', error);
         toast({
           title: "Erro no login",
           description: error.message,
           variant: "destructive",
         });
+      } else {
+        console.log('Signin successful, user:', data.user?.email);
+        toast({
+          title: "Login realizado",
+          description: "Bem-vindo de volta!",
+        });
       }
 
       return { error };
     } catch (error: any) {
+      console.error('Signin catch error:', error);
       return { error };
     }
   };
 
   const signOut = async () => {
     try {
+      console.log('Attempting signout');
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);

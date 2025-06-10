@@ -8,34 +8,59 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { signIn } = useAuth();
+  const { toast } = useToast();
   const userType = searchParams.get("type") || "client";
   
   const [loginData, setLoginData] = useState({
     email: "",
     password: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!loginData.email || !loginData.password) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha email e senha.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const { error } = await signIn(loginData.email, loginData.password);
-    
-    if (!error) {
-      // Redirect will be handled by auth state change
-      if (userType === "client") {
-        navigate("/client-dashboard");
-      } else {
-        navigate("/barbershop-dashboard");
+    setIsLoading(true);
+    console.log('Starting login process for:', loginData.email);
+
+    try {
+      const { error } = await signIn(loginData.email, loginData.password);
+      
+      if (!error) {
+        console.log('Login successful, redirecting...');
+        // Wait a bit for the auth state to update
+        setTimeout(() => {
+          if (userType === "client") {
+            navigate("/client-dashboard");
+          } else {
+            navigate("/barbershop-dashboard");
+          }
+        }, 1000);
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Erro no login",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -86,6 +111,7 @@ const Login = () => {
                         value={loginData.email}
                         onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                         required
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
@@ -102,12 +128,13 @@ const Login = () => {
                         value={loginData.password}
                         onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                         required
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full">
-                    Entrar como Cliente
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Entrando..." : "Entrar como Cliente"}
                   </Button>
                 </form>
               </TabsContent>
@@ -126,6 +153,7 @@ const Login = () => {
                         value={loginData.email}
                         onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                         required
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
@@ -142,12 +170,13 @@ const Login = () => {
                         value={loginData.password}
                         onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                         required
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full">
-                    Entrar como Barbearia
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Entrando..." : "Entrar como Barbearia"}
                   </Button>
                 </form>
               </TabsContent>
