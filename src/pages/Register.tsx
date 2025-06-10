@@ -97,7 +97,7 @@ const Register = () => {
                       <Input
                         id="client-name"
                         type="text"
-                        placeholder="João Silva"
+                        placeholder="Digite seu nome:"
                         className="pl-10"
                         value={clientData.name}
                         onChange={(e) => setClientData({...clientData, name: e.target.value})}
@@ -129,7 +129,7 @@ const Register = () => {
                       <Input
                         id="client-email"
                         type="email"
-                        placeholder="joao@email.com"
+                        placeholder="seu@email.com"
                         className="pl-10"
                         value={clientData.email}
                         onChange={(e) => setClientData({...clientData, email: e.target.value})}
@@ -169,7 +169,7 @@ const Register = () => {
                       <Input
                         id="barbershop-name"
                         type="text"
-                        placeholder="Barbearia do João"
+                        placeholder="Nome da Barbearia"
                         className="pl-10"
                         value={barbershopData.name}
                         onChange={(e) => setBarbershopData({...barbershopData, name: e.target.value})}
@@ -200,7 +200,7 @@ const Register = () => {
                       <Input
                         id="barbershop-email"
                         type="email"
-                        placeholder="contato@barbearia.com"
+                        placeholder="sua@barbearia.com"
                         className="pl-10"
                         value={barbershopData.email}
                         onChange={(e) => setBarbershopData({...barbershopData, email: e.target.value})}
