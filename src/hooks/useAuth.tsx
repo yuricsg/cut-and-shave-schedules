@@ -10,7 +10,7 @@ interface AuthContextType {
   userProfile: any | null;
   loading: boolean;
   signUp: (email: string, password: string, userData: any) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any, userProfile?: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -35,13 +35,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Error fetching user profile:', error);
-        return;
+        return null;
       }
 
       console.log('Profile fetched successfully:', data);
       setUserProfile(data);
+      return data;
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      return null;
     }
   };
 
@@ -59,10 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (session?.user) {
           console.log('User session available, fetching profile...');
-          // Use setTimeout to prevent potential deadlocks
-          setTimeout(() => {
-            fetchUserProfile(session.user!.id);
-          }, 0);
+          await fetchUserProfile(session.user.id);
         } else {
           setUserProfile(null);
         }
@@ -135,20 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       console.log('Attempting signin for:', email);
-      // Clean up existing auth tokens to prevent issues
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-          localStorage.removeItem(key);
-        }
-      });
       
-      // Try to sign out before signing in to ensure clean state
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        console.log('Ignoring signout error before signin');
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -165,12 +151,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       console.log('Signin successful for user:', data.user?.email);
+      
+      // Buscar o perfil do usuário imediatamente após o login
+      const profile = await fetchUserProfile(data.user.id);
+      
       toast({
         title: "Login realizado",
         description: "Bem-vindo de volta!",
       });
 
-      return { error: null };
+      return { error: null, userProfile: profile };
     } catch (error: any) {
       console.error('Signin catch error:', error);
       return { error };
@@ -180,13 +170,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       console.log('Attempting signout');
-      
-      // Clean up all auth tokens first
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-          localStorage.removeItem(key);
-        }
-      });
       
       await supabase.auth.signOut();
       setUser(null);

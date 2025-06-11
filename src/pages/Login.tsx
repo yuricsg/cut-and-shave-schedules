@@ -60,11 +60,25 @@ const Login = () => {
     console.log('Starting login process for:', loginData.email);
 
     try {
-      const { error } = await signIn(loginData.email, loginData.password);
+      const { error, userProfile: profile } = await signIn(loginData.email, loginData.password);
       
-      if (!error) {
-        console.log('Login successful, waiting for profile data...');
-        // Don't navigate here - let the useEffect handle navigation after profile is loaded
+      if (!error && profile) {
+        console.log('Login successful, redirecting to dashboard. User type:', profile.user_type);
+        
+        // Redirecionar imediatamente após o login bem-sucedido
+        switch (profile.user_type) {
+          case 'client':
+            navigate('/client-dashboard');
+            break;
+          case 'barbershop':
+            navigate('/barbershop-dashboard');
+            break;
+          case 'barber':
+            navigate('/barber-dashboard');
+            break;
+          default:
+            navigate('/');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
